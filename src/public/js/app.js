@@ -1,7 +1,8 @@
 const socket = io();
 
 const welcome = document.getElementById("welcome");
-const form = welcome.querySelector("form");
+const nameForm = welcome.querySelector("#name");
+const enterForm = welcome.querySelector("#enter");
 const room = document.getElementById("room");
 
 room.hidden = true;
@@ -17,7 +18,7 @@ function addMessage(message) {
 
 function handleMessageSubmit(event) {
     event.preventDefault();
-    input = room.querySelector("input");
+    input = room.querySelector("#msg input");
     const value = input.value;
     socket.emit("new_message", value, roomName, () => {
         addMessage(`You: ${value}`);
@@ -25,31 +26,41 @@ function handleMessageSubmit(event) {
     input.value = "";
 }
 
+function handleNameSubmit(event) {
+    event.preventDefault();
+    input = nameForm.querySelector("input");
+    const h3 = welcome.querySelector("h3");
+    const value = input.value;
+    h3.innerText = value;
+    socket.emit("nickname", value);
+}
+
 function showRoom() {
     welcome.hidden = true;
     room.hidden = false;
     const h3 = room.querySelector("h3");
     h3.innerText = `Room ${roomName}`;
-    const form = room.querySelector("form");
-    form.addEventListener("submit", handleMessageSubmit);
+    const msgForm = room.querySelector("#msg");
+    msgForm.addEventListener("submit", handleMessageSubmit);
 }
 
 function handleRoomSubmit(event) {
     event.preventDefault();
-    const input = form.querySelector("input");
+    const input = enterForm.querySelector("input");
     socket.emit("enter_room", input.value, showRoom);
     roomName = input.value;
     input.value = "";
 }
 
-form.addEventListener("submit", handleRoomSubmit);
+nameForm.addEventListener("submit", handleNameSubmit);
+enterForm.addEventListener("submit", handleRoomSubmit);
 
-socket.on("welcome", () => {
-    addMessage("Someone joined!");
+socket.on("welcome", (user) => {
+    addMessage(`${user} joined!`);
 });
 
-socket.on("bye", () => {
-    addMessage("Someone left ㅠㅠ");
+socket.on("bye", (user) => {
+    addMessage(`${user} left ㅠㅠ`);
 });
 
 socket.on("new_message", addMessage);
